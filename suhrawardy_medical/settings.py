@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "core",
     "api",
     "authentication",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
@@ -45,6 +46,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js development server
     # Add your production Next.js domain
 ]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "suhrawardy_medical.urls"
 

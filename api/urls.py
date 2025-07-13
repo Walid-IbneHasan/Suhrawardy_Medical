@@ -4,6 +4,7 @@ from .views import (
     BlogDetailView,
     BlogCommentCreateView,
     EventListView,
+    EventDetailView,
     ServiceListView,
     BloodInventoryListView,
     VaccineInventoryListView,
@@ -20,6 +21,7 @@ urlpatterns = [
         name="blog-comment",
     ),
     path("events/", EventListView.as_view(), name="event-list"),
+    path("events/<int:id>/", EventDetailView.as_view(), name="event-detail"),
     path("services/", ServiceListView.as_view(), name="service-list"),
     path("blood-inventory/", BloodInventoryListView.as_view(), name="blood-inventory"),
     path(

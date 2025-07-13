@@ -46,6 +46,11 @@ class EventListView(generics.ListAPIView):
     serializer_class = EventSerializer
 
 
+class EventDetailView(generics.RetrieveAPIView):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    lookup_field = "id"
+
 class ServiceListView(generics.ListAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer

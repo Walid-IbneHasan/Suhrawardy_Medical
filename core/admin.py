@@ -2,6 +2,7 @@ from django.contrib import admin
 from unfold.admin import ModelAdmin
 from .models import (
     User,
+    Image,
     Blog,
     Event,
     BloodInventory,
@@ -13,6 +14,12 @@ from .models import (
     BloodRequest,
     BloodDonationInterest,
 )
+
+
+class ImageInline(admin.TabularInline):
+    model = Image
+    extra = 1
+    fields = ["image"]
 
 
 @admin.register(User)
@@ -28,6 +35,7 @@ class BlogAdmin(ModelAdmin):
     prepopulated_fields = {"slug": ("title",)}
     list_filter = ["published"]
     list_editable = ["published"]
+    inlines = [ImageInline]
 
 
 @admin.register(Event)
@@ -35,6 +43,7 @@ class EventAdmin(ModelAdmin):
     list_display = ["title", "date", "location"]
     search_fields = ["title", "description"]
     list_filter = ["date"]
+    inlines = [ImageInline]
 
 
 @admin.register(BloodInventory)

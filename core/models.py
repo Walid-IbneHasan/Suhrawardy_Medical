@@ -15,7 +15,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("username", None)  # Ensure username is optional
+        extra_fields.setdefault("username", None)
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
@@ -38,12 +38,24 @@ class User(AbstractUser):
         return self.email
 
 
+class Image(models.Model):
+    image = models.ImageField(upload_to="images/")
+    blog = models.ForeignKey(
+        "Blog", on_delete=models.CASCADE, related_name="images", null=True, blank=True
+    )
+    event = models.ForeignKey(
+        "Event", on_delete=models.CASCADE, related_name="images", null=True, blank=True
+    )
+
+    def __str__(self):
+        return f"Image for {self.blog or self.event}"
+
+
 class Blog(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to="blogs/", blank=True, null=True)
     published = models.BooleanField(default=False)
 
     def __str__(self):
@@ -55,7 +67,6 @@ class Event(models.Model):
     description = models.TextField()
     location = models.CharField(max_length=255)
     date = models.DateTimeField()
-    image = models.ImageField(upload_to="events/", blank=True, null=True)
 
     def __str__(self):
         return self.title

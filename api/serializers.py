@@ -9,6 +9,7 @@ from core.models import (
     BloodRequest,
     BloodDonationInterest,
     User,
+    Image,
 )
 
 
@@ -18,10 +19,18 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "email"]
 
 
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image
+        fields = ["image"]
+
+
 class BlogSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Blog
-        fields = ["id", "title", "slug", "content", "created_at", "image", "published"]
+        fields = ["id", "title", "slug", "content", "created_at", "published", "images"]
 
 
 class BlogCommentSerializer(serializers.ModelSerializer):
@@ -34,9 +43,11 @@ class BlogCommentSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Event
-        fields = ["id", "title", "description", "location", "date", "image"]
+        fields = ["id", "title", "description", "location", "date", "images"]
 
 
 class BloodInventorySerializer(serializers.ModelSerializer):
