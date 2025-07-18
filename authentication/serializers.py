@@ -34,6 +34,7 @@ class LoginSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError("Invalid credentials")
         data["user"] = user
+        data["is_superuser"] = user.is_superuser
         return data
 
 

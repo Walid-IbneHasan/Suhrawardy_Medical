@@ -5,6 +5,8 @@ from core.models import (
     BloodInventory,
     VaccineInventory,
     Service,
+    Activity,
+    TopDonor,
     BlogComment,
     BloodRequest,
     BloodDonationInterest,
@@ -16,13 +18,15 @@ from core.models import (
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email"]
+        fields = ["id", "email", "username", "is_staff", "is_superuser", "date_joined"]
+        read_only_fields = ["date_joined"]
 
 
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ["image"]
+        fields = ["id", "image", "blog", "event"]
+        read_only_fields = ["blog", "event"]
 
 
 class BlogSerializer(serializers.ModelSerializer):
@@ -31,6 +35,7 @@ class BlogSerializer(serializers.ModelSerializer):
     class Meta:
         model = Blog
         fields = ["id", "title", "slug", "content", "created_at", "published", "images"]
+        read_only_fields = ["created_at"]
 
 
 class BlogCommentSerializer(serializers.ModelSerializer):
@@ -44,6 +49,7 @@ class BlogCommentSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True, read_only=True)
+    description = serializers.CharField(allow_blank=True)
 
     class Meta:
         model = Event
@@ -63,9 +69,25 @@ class VaccineInventorySerializer(serializers.ModelSerializer):
 
 
 class ServiceSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(allow_blank=True)
+
     class Meta:
         model = Service
         fields = ["id", "name", "description"]
+
+
+class ActivitySerializer(serializers.ModelSerializer):
+    description = serializers.CharField(allow_blank=True)
+
+    class Meta:
+        model = Activity
+        fields = ["id", "title", "description", "date"]
+
+
+class TopDonorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TopDonor
+        fields = ["id", "name", "blood_group", "donations"]
 
 
 class BloodRequestSerializer(serializers.ModelSerializer):

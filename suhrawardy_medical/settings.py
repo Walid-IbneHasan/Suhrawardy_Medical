@@ -43,7 +43,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Next.js development server
+    "http://localhost:8080",  # Next.js development server
     # Add your production Next.js domain
 ]
 CORS_ALLOW_ALL_ORIGINS = True

@@ -10,9 +10,34 @@ from .views import (
     VaccineInventoryListView,
     BloodRequestCreateView,
     BloodDonationInterestCreateView,
+    AdminBlogListCreateView,
+    AdminBlogDetailView,
+    AdminEventListCreateView,
+    AdminEventDetailView,
+    AdminServiceListCreateView,
+    AdminServiceDetailView,
+    AdminActivityListCreateView,
+    AdminActivityDetailView,
+    AdminTopDonorListCreateView,
+    AdminTopDonorDetailView,
+    AdminBloodInventoryListCreateView,
+    AdminBloodInventoryDetailView,
+    AdminVaccineInventoryListCreateView,
+    AdminVaccineInventoryDetailView,
+    AdminBlogCommentListCreateView,
+    AdminBlogCommentDetailView,
+    AdminBloodRequestListCreateView,
+    AdminBloodRequestDetailView,
+    AdminBloodDonationInterestListCreateView,
+    AdminBloodDonationInterestDetailView,
+    AdminUserListCreateView,
+    AdminUserDetailView,
+    AdminImageListCreateView,
+    AdminImageDetailView,
 )
 
 urlpatterns = [
+    # Public Endpoints
     path("blogs/", BlogListView.as_view(), name="blog-list"),
     path("blogs/<slug:slug>/", BlogDetailView.as_view(), name="blog-detail"),
     path(
@@ -34,5 +59,120 @@ urlpatterns = [
         "donate-interest/",
         BloodDonationInterestCreateView.as_view(),
         name="donate-interest",
+    ),
+    # Admin Endpoints
+    path(
+        "admin/blogs/", AdminBlogListCreateView.as_view(), name="admin-blog-list-create"
+    ),
+    path(
+        "admin/blogs/<slug:slug>/",
+        AdminBlogDetailView.as_view(),
+        name="admin-blog-detail",
+    ),
+    path(
+        "admin/events/",
+        AdminEventListCreateView.as_view(),
+        name="admin-event-list-create",
+    ),
+    path(
+        "admin/events/<int:id>/",
+        AdminEventDetailView.as_view(),
+        name="admin-event-detail",
+    ),
+    path(
+        "admin/services/",
+        AdminServiceListCreateView.as_view(),
+        name="admin-service-list-create",
+    ),
+    path(
+        "admin/services/<int:id>/",
+        AdminServiceDetailView.as_view(),
+        name="admin-service-detail",
+    ),
+    path(
+        "admin/activities/",
+        AdminActivityListCreateView.as_view(),
+        name="admin-activity-list-create",
+    ),
+    path(
+        "admin/activities/<int:id>/",
+        AdminActivityDetailView.as_view(),
+        name="admin-activity-detail",
+    ),
+    path(
+        "admin/top-donors/",
+        AdminTopDonorListCreateView.as_view(),
+        name="admin-top-donor-list-create",
+    ),
+    path(
+        "admin/top-donors/<int:id>/",
+        AdminTopDonorDetailView.as_view(),
+        name="admin-top-donor-detail",
+    ),
+    path(
+        "admin/blood-inventory/",
+        AdminBloodInventoryListCreateView.as_view(),
+        name="admin-blood-inventory-list-create",
+    ),
+    path(
+        "admin/blood-inventory/<int:id>/",
+        AdminBloodInventoryDetailView.as_view(),
+        name="admin-blood-inventory-detail",
+    ),
+    path(
+        "admin/vaccine-inventory/",
+        AdminVaccineInventoryListCreateView.as_view(),
+        name="admin-vaccine-inventory-list-create",
+    ),
+    path(
+        "admin/vaccine-inventory/<int:id>/",
+        AdminVaccineInventoryDetailView.as_view(),
+        name="admin-vaccine-inventory-detail",
+    ),
+    path(
+        "admin/comments/",
+        AdminBlogCommentListCreateView.as_view(),
+        name="admin-comment-list-create",
+    ),
+    path(
+        "admin/comments/<int:id>/",
+        AdminBlogCommentDetailView.as_view(),
+        name="admin-comment-detail",
+    ),
+    path(
+        "admin/blood-requests/",
+        AdminBloodRequestListCreateView.as_view(),
+        name="admin-blood-request-list-create",
+    ),
+    path(
+        "admin/blood-requests/<int:id>/",
+        AdminBloodRequestDetailView.as_view(),
+        name="admin-blood-request-detail",
+    ),
+    path(
+        "admin/donation-interests/",
+        AdminBloodDonationInterestListCreateView.as_view(),
+        name="admin-donation-interest-list-create",
+    ),
+    path(
+        "admin/donation-interests/<int:id>/",
+        AdminBloodDonationInterestDetailView.as_view(),
+        name="admin-donation-interest-detail",
+    ),
+    path(
+        "admin/users/", AdminUserListCreateView.as_view(), name="admin-user-list-create"
+    ),
+    path(
+        "admin/users/<int:id>/", AdminUserDetailView.as_view(), name="admin-user-detail"
+    ),
+    path(
+        "admin/images/",
+        AdminImageListCreateView.as_view(),
+        name="admin-image-list-create",
+    ),
+    path(
+        "admin/images/<int:id>/",
+        AdminImageDetailView.as_view(),
+        name="admin-image-detail",
     ),
 ]

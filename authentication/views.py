@@ -19,6 +19,8 @@ from datetime import timedelta
 
 
 class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
@@ -35,6 +37,8 @@ class RegisterView(APIView):
 
 
 class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
@@ -44,6 +48,7 @@ class LoginView(APIView):
                 {
                     "refresh": str(refresh),
                     "access": str(refresh.access_token),
+                    "is_superuser": serializer.validated_data["is_superuser"],
                 },
                 status=status.HTTP_200_OK,
             )
@@ -67,6 +72,8 @@ class ChangePasswordView(APIView):
 
 
 class ForgotPasswordView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
         if serializer.is_valid():
