@@ -46,6 +46,16 @@ class Image(models.Model):
     event = models.ForeignKey(
         "Event", on_delete=models.CASCADE, related_name="images", null=True, blank=True
     )
+    team_member = models.ForeignKey(
+        "TeamMember",
+        on_delete=models.CASCADE,
+        related_name="images",
+        null=True,
+        blank=True,
+    )
+    about = models.ForeignKey(
+        "About", on_delete=models.CASCADE, null=True, blank=True, related_name="images"
+    )
 
     def __str__(self):
         return f"Image for {self.blog or self.event}"
@@ -91,12 +101,7 @@ class BloodInventory(models.Model):
 
 
 class VaccineInventory(models.Model):
-    VACCINE_TYPES = [
-        ("Hepatitis B", "Hepatitis B"),
-        ("Rabies", "Rabies"),
-        ("HPV", "HPV"),
-    ]
-    type = models.CharField(max_length=50, choices=VACCINE_TYPES)
+    type = models.CharField(max_length=100)
     available = models.BooleanField(default=True)
 
     def __str__(self):
@@ -158,3 +163,44 @@ class BloodDonationInterest(models.Model):
 
     def __str__(self):
         return f"Interest by {self.user} for {self.blood_group}"
+
+
+class About(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    years_experience = models.PositiveIntegerField()
+    patients_served = models.CharField(max_length=50)
+    satisfaction_rate = models.CharField(max_length=50)
+    image = models.ImageField(upload_to="about/", blank=True, null=True)
+
+    def __str__(self):
+        return self.title
+
+
+class Achievement(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    icon = models.CharField(max_length=50)  # Store icon name (e.g., "Award", "Users")
+
+    def __str__(self):
+        return self.title
+
+
+class TeamMember(models.Model):
+    name = models.CharField(max_length=255)
+    role = models.CharField(max_length=100)
+    specialty = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class Mission(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    phone = models.CharField(max_length=50)
+    email = models.CharField(max_length=255)
+    address = models.TextField()
+
+    def __str__(self):
+        return self.title

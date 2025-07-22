@@ -1,12 +1,24 @@
 from django.urls import path
 from .views import (
+    AboutListView,
+    AchievementListView,
+    AdminAboutDetailView,
+    AdminAboutListCreateView,
+    AdminAchievementDetailView,
+    AdminAchievementListCreateView,
+    AdminMissionDetailView,
+    AdminMissionListCreateView,
+    AdminTeamMemberDetailView,
+    AdminTeamMemberListCreateView,
     BlogListView,
     BlogDetailView,
     BlogCommentCreateView,
     EventListView,
     EventDetailView,
+    MissionListView,
     ServiceListView,
     BloodInventoryListView,
+    TeamMemberListView,
     VaccineInventoryListView,
     BloodRequestCreateView,
     BloodDonationInterestCreateView,
@@ -60,6 +72,10 @@ urlpatterns = [
         BloodDonationInterestCreateView.as_view(),
         name="donate-interest",
     ),
+    path("about/", AboutListView.as_view(), name="about-list"),
+    path("achievements/", AchievementListView.as_view(), name="achievement-list"),
+    path("team-members/", TeamMemberListView.as_view(), name="team-member-list"),
+    path("mission/", MissionListView.as_view(), name="mission-list"),
     # Admin Endpoints
     path(
         "admin/blogs/", AdminBlogListCreateView.as_view(), name="admin-blog-list-create"
@@ -174,5 +190,45 @@ urlpatterns = [
         "admin/images/<int:id>/",
         AdminImageDetailView.as_view(),
         name="admin-image-detail",
+    ),
+    path(
+        "admin/about/",
+        AdminAboutListCreateView.as_view(),
+        name="admin-about-list-create",
+    ),
+    path(
+        "admin/about/<int:id>/",
+        AdminAboutDetailView.as_view(),
+        name="admin-about-detail",
+    ),
+    path(
+        "admin/achievements/",
+        AdminAchievementListCreateView.as_view(),
+        name="admin-achievement-list-create",
+    ),
+    path(
+        "admin/achievements/<int:id>/",
+        AdminAchievementDetailView.as_view(),
+        name="admin-achievement-detail",
+    ),
+    path(
+        "admin/team-members/",
+        AdminTeamMemberListCreateView.as_view(),
+        name="admin-team-member-list-create",
+    ),
+    path(
+        "admin/team-members/<int:id>/",
+        AdminTeamMemberDetailView.as_view(),
+        name="admin-team-member-detail",
+    ),
+    path(
+        "admin/mission/",
+        AdminMissionListCreateView.as_view(),
+        name="admin-mission-list-create",
+    ),
+    path(
+        "admin/mission/<int:id>/",
+        AdminMissionDetailView.as_view(),
+        name="admin-mission-detail",
     ),
 ]

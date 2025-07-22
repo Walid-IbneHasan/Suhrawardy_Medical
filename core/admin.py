@@ -1,6 +1,10 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
 from .models import (
+    About,
+    Achievement,
+    Mission,
+    TeamMember,
     User,
     Image,
     Blog,
@@ -98,3 +102,38 @@ class BloodDonationInterestAdmin(ModelAdmin):
     list_display = ["user", "blood_group", "available_date"]
     search_fields = ["user__email", "blood_group"]
     list_filter = ["blood_group", "available_date"]
+
+
+@admin.register(About)
+class AboutAdmin(ModelAdmin):
+    list_display = ["title", "years_experience", "patients_served", "satisfaction_rate"]
+    search_fields = ["title", "description"]
+    fields = [
+        "title",
+        "description",
+        "years_experience",
+        "patients_served",
+        "satisfaction_rate",
+        "image",
+    ]
+
+
+@admin.register(Achievement)
+class AchievementAdmin(ModelAdmin):
+    list_display = ["title", "icon"]
+    search_fields = ["title", "description"]
+    fields = ["title", "description", "icon"]
+
+
+@admin.register(TeamMember)
+class TeamMemberAdmin(ModelAdmin):
+    list_display = ["name", "role", "specialty"]
+    search_fields = ["name", "role", "specialty"]
+    inlines = [ImageInline]
+
+
+@admin.register(Mission)
+class MissionAdmin(ModelAdmin):
+    list_display = ["title", "phone", "email"]
+    search_fields = ["title", "description", "phone", "email", "address"]
+    fields = ["title", "description", "phone", "email", "address"]

@@ -1,9 +1,14 @@
 from rest_framework import generics, permissions
 from rest_framework.permissions import IsAdminUser
+from rest_framework.parsers import MultiPartParser, FormParser
 from core.models import (
+    About,
+    Achievement,
     Blog,
     Event,
     BloodInventory,
+    Mission,
+    TeamMember,
     VaccineInventory,
     Service,
     Activity,
@@ -15,10 +20,14 @@ from core.models import (
     Image,
 )
 from .serializers import (
+    AboutSerializer,
+    AchievementSerializer,
     BlogSerializer,
     BlogCommentSerializer,
     EventSerializer,
     BloodInventorySerializer,
+    MissionSerializer,
+    TeamMemberSerializer,
     VaccineInventorySerializer,
     ServiceSerializer,
     ActivitySerializer,
@@ -95,11 +104,32 @@ class BloodDonationInterestCreateView(generics.CreateAPIView):
         serializer.save(user=self.request.user)
 
 
+class AboutListView(generics.ListAPIView):
+    queryset = About.objects.all()
+    serializer_class = AboutSerializer
+
+
+class AchievementListView(generics.ListAPIView):
+    queryset = Achievement.objects.all()
+    serializer_class = AchievementSerializer
+
+
+class TeamMemberListView(generics.ListAPIView):
+    queryset = TeamMember.objects.all()
+    serializer_class = TeamMemberSerializer
+
+
+class MissionListView(generics.ListAPIView):
+    queryset = Mission.objects.all()
+    serializer_class = MissionSerializer
+
+
 # Admin Views
 class AdminBlogListCreateView(generics.ListCreateAPIView):
     queryset = Blog.objects.all()
     serializer_class = BlogSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser]
 
 
 class AdminBlogDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -107,12 +137,14 @@ class AdminBlogDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BlogSerializer
     permission_classes = [IsAdminUser]
     lookup_field = "slug"
+    parser_classes = [MultiPartParser, FormParser]
 
 
 class AdminEventListCreateView(generics.ListCreateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser]
 
 
 class AdminEventDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -120,6 +152,7 @@ class AdminEventDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = EventSerializer
     permission_classes = [IsAdminUser]
     lookup_field = "id"
+    parser_classes = [MultiPartParser, FormParser]
 
 
 class AdminServiceListCreateView(generics.ListCreateAPIView):
@@ -257,5 +290,61 @@ class AdminImageListCreateView(generics.ListCreateAPIView):
 class AdminImageDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
+    permission_classes = [IsAdminUser]
+    lookup_field = "id"
+
+
+class AdminAboutListCreateView(generics.ListCreateAPIView):
+    queryset = About.objects.all()
+    serializer_class = AboutSerializer
+    permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser]
+
+
+class AdminAboutDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = About.objects.all()
+    serializer_class = AboutSerializer
+    permission_classes = [IsAdminUser]
+    lookup_field = "id"
+    parser_classes = [MultiPartParser, FormParser]
+
+
+class AdminAchievementListCreateView(generics.ListCreateAPIView):
+    queryset = Achievement.objects.all()
+    serializer_class = AchievementSerializer
+    permission_classes = [IsAdminUser]
+
+
+class AdminAchievementDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Achievement.objects.all()
+    serializer_class = AchievementSerializer
+    permission_classes = [IsAdminUser]
+    lookup_field = "id"
+
+
+class AdminTeamMemberListCreateView(generics.ListCreateAPIView):
+    queryset = TeamMember.objects.all()
+    serializer_class = TeamMemberSerializer
+    permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser]
+
+
+class AdminTeamMemberDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TeamMember.objects.all()
+    serializer_class = TeamMemberSerializer
+    permission_classes = [IsAdminUser]
+    lookup_field = "id"
+    parser_classes = [MultiPartParser, FormParser]
+
+
+class AdminMissionListCreateView(generics.ListCreateAPIView):
+    queryset = Mission.objects.all()
+    serializer_class = MissionSerializer
+    permission_classes = [IsAdminUser]
+
+
+class AdminMissionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Mission.objects.all()
+    serializer_class = MissionSerializer
     permission_classes = [IsAdminUser]
     lookup_field = "id"

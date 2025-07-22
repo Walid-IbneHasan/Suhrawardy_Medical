@@ -1,8 +1,12 @@
 from rest_framework import serializers
 from core.models import (
+    About,
+    Achievement,
     Blog,
     Event,
     BloodInventory,
+    Mission,
+    TeamMember,
     VaccineInventory,
     Service,
     Activity,
@@ -25,8 +29,8 @@ class UserSerializer(serializers.ModelSerializer):
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
-        fields = ["id", "image", "blog", "event"]
-        read_only_fields = ["blog", "event"]
+        fields = ["id", "image", "blog", "event", "team_member", "about"]
+        read_only_fields = ["blog", "event", "team_member", "about"]
 
 
 class BlogSerializer(serializers.ModelSerializer):
@@ -106,3 +110,76 @@ class BloodDonationInterestSerializer(serializers.ModelSerializer):
         model = BloodDonationInterest
         fields = ["id", "user", "blood_group", "available_date", "contact_info"]
         read_only_fields = ["user"]
+
+
+class AboutSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(write_only=True, required=False, allow_null=True)
+    images = ImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = About
+        fields = [
+            "id",
+            "title",
+            "description",
+            "years_experience",
+            "patients_served",
+            "satisfaction_rate",
+            "image",
+            "images",
+        ]
+
+    def create(self, validated_data):
+        image = validated_data.pop("image", None)
+        about = About.objects.create(**validated_data)
+        if image:
+            Image.objects.create(about=about, image=image)
+        return about
+
+    def update(self, instance, validated_data):
+        image = validated_data.pop("image", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if image:
+            Image.objects.filter(about=instance).delete()
+            Image.objects.create(about=instance, image=image)
+        return instance
+
+
+class AchievementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Achievement
+        fields = ["id", "title", "description", "icon"]
+
+
+class TeamMemberSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(write_only=True, required=False, allow_null=True)
+    images = ImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = TeamMember
+        fields = ["id", "name", "role", "specialty", "image", "images"]
+
+    def create(self, validated_data):
+        image = validated_data.pop("image", None)
+        team_member = TeamMember.objects.create(**validated_data)
+        if image:
+            Image.objects.create(team_member=team_member, image=image)
+        return team_member
+
+    def update(self, instance, validated_data):
+        image = validated_data.pop("image", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if image:
+            Image.objects.filter(team_member=instance).delete()
+            Image.objects.create(team_member=instance, image=image)
+        return instance
+
+
+class MissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Mission
+        fields = ["id", "title", "description", "phone", "email", "address"]
