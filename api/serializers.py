@@ -35,11 +35,44 @@ class ImageSerializer(serializers.ModelSerializer):
 
 class BlogSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True, read_only=True)
+    image_files = serializers.ListField(
+        child=serializers.ImageField(),
+        write_only=True,
+        required=False,
+        allow_empty=True,
+    )
 
     class Meta:
         model = Blog
-        fields = ["id", "title", "slug", "content", "created_at", "published", "images"]
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "content",
+            "created_at",
+            "published",
+            "images",
+            "image_files",
+        ]
         read_only_fields = ["created_at"]
+
+    def create(self, validated_data):
+        image_files = validated_data.pop("image_files", [])
+        blog = Blog.objects.create(**validated_data)
+        for image_file in image_files:
+            Image.objects.create(blog=blog, image=image_file)
+        return blog
+
+    def update(self, instance, validated_data):
+        image_files = validated_data.pop("image_files", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if image_files is not None:
+            Image.objects.filter(blog=instance).delete()
+            for image_file in image_files:
+                Image.objects.create(blog=instance, image=image_file)
+        return instance
 
 
 class BlogCommentSerializer(serializers.ModelSerializer):
