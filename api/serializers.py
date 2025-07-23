@@ -20,10 +20,55 @@ from core.models import (
 
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = User
-        fields = ["id", "email", "username", "is_staff", "is_superuser", "date_joined"]
+        fields = [
+            "id",
+            "email",
+            "username",
+            "is_staff",
+            "is_superuser",
+            "date_joined",
+            "password",
+            "confirm_password",
+        ]
         read_only_fields = ["date_joined"]
+
+    def validate(self, data):
+        if data["password"] != data["confirm_password"]:
+            raise serializers.ValidationError({"password": "Passwords do not match"})
+        if data.get("is_superuser") and not data.get("is_staff"):
+            data["is_staff"] = True  # Ensure is_staff is True when is_superuser is True
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop("confirm_password")
+        password = validated_data.pop("password")
+        user = User.objects.create_user(
+            email=validated_data["email"],
+            password=password,
+            username=validated_data.get("username"),
+            is_staff=validated_data.get("is_staff", False),
+            is_superuser=validated_data.get("is_superuser", False),
+        )
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        validated_data.pop("confirm_password", None)
+        if validated_data.get("is_superuser") and not validated_data.get("is_staff"):
+            validated_data["is_staff"] = (
+                True  # Ensure is_staff is True when is_superuser is True
+            )
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -86,11 +131,43 @@ class BlogCommentSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True, read_only=True)
+    image_files = serializers.ListField(
+        child=serializers.ImageField(),
+        write_only=True,
+        required=False,
+        allow_empty=True,
+    )
     description = serializers.CharField(allow_blank=True)
 
     class Meta:
         model = Event
-        fields = ["id", "title", "description", "location", "date", "images"]
+        fields = [
+            "id",
+            "title",
+            "description",
+            "location",
+            "date",
+            "images",
+            "image_files",
+        ]
+
+    def create(self, validated_data):
+        image_files = validated_data.pop("image_files", [])
+        event = Event.objects.create(**validated_data)
+        for image_file in image_files:
+            Image.objects.create(event=event, image=image_file)
+        return event
+
+    def update(self, instance, validated_data):
+        image_files = validated_data.pop("image_files", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if image_files is not None:
+            Image.objects.filter(event=instance).delete()
+            for image_file in image_files:
+                Image.objects.create(event=instance, image=image_file)
+        return instance
 
 
 class BloodInventorySerializer(serializers.ModelSerializer):
