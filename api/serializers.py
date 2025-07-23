@@ -5,7 +5,10 @@ from core.models import (
     Blog,
     Event,
     BloodInventory,
+    HomeAbout,
+    HomeAboutAchievement,
     Mission,
+    MissionStatement,
     TeamMember,
     VaccineInventory,
     Service,
@@ -293,3 +296,19 @@ class MissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Mission
         fields = ["id", "title", "description", "phone", "email", "address"]
+
+
+class HomeAboutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeAbout
+        fields = ['id', 'title', 'description', 'years_experience', 'patients_served', 'satisfaction_rate']
+
+class MissionStatementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MissionStatement
+        fields = ['id', 'statement']
+
+class HomeAboutAchievementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeAboutAchievement
+        fields = ['id', 'title', 'description', 'icon']

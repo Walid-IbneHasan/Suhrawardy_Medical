@@ -204,3 +204,61 @@ class Mission(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class HomeAbout(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    years_experience = models.PositiveIntegerField(default=0)
+    patients_served = models.CharField(max_length=50)
+    satisfaction_rate = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Home About"
+        verbose_name_plural = "Home About Sections"
+
+    def __str__(self):
+        return self.title
+
+
+class MissionStatement(models.Model):
+    statement = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Mission Statement"
+        verbose_name_plural = "Mission Statements"
+
+    def __str__(self):
+        return self.statement[:50]
+
+
+class HomeAboutAchievement(models.Model):
+    ICON_CHOICES = [
+        ("Award", "Award"),
+        ("Users", "Users"),
+        ("Heart", "Heart"),
+        ("Activity", "Activity"),
+        ("Shield", "Shield"),
+        ("Star", "Star"),
+        ("CheckCircle", "CheckCircle"),
+        ("Trophy", "Trophy"),
+        ("UserCheck", "UserCheck"),
+        ("HeartPulse", "HeartPulse"),
+    ]
+
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    icon = models.CharField(max_length=50, choices=ICON_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Home About Achievement"
+        verbose_name_plural = "Home About Achievements"
+
+    def __str__(self):
+        return self.title

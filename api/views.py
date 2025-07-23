@@ -7,7 +7,10 @@ from core.models import (
     Blog,
     Event,
     BloodInventory,
+    HomeAbout,
+    HomeAboutAchievement,
     Mission,
+    MissionStatement,
     TeamMember,
     VaccineInventory,
     Service,
@@ -26,7 +29,10 @@ from .serializers import (
     BlogCommentSerializer,
     EventSerializer,
     BloodInventorySerializer,
+    HomeAboutAchievementSerializer,
+    HomeAboutSerializer,
     MissionSerializer,
+    MissionStatementSerializer,
     TeamMemberSerializer,
     VaccineInventorySerializer,
     ServiceSerializer,
@@ -122,6 +128,21 @@ class TeamMemberListView(generics.ListAPIView):
 class MissionListView(generics.ListAPIView):
     queryset = Mission.objects.all()
     serializer_class = MissionSerializer
+
+
+class HomeAboutListView(generics.ListAPIView):
+    queryset = HomeAbout.objects.all()
+    serializer_class = HomeAboutSerializer
+
+
+class MissionStatementListView(generics.ListAPIView):
+    queryset = MissionStatement.objects.all()
+    serializer_class = MissionStatementSerializer
+
+
+class HomeAboutAchievementListView(generics.ListAPIView):
+    queryset = HomeAboutAchievement.objects.all()
+    serializer_class = HomeAboutAchievementSerializer
 
 
 # Admin Views
@@ -347,4 +368,43 @@ class AdminMissionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Mission.objects.all()
     serializer_class = MissionSerializer
     permission_classes = [IsAdminUser]
+    lookup_field = "id"
+
+
+class AdminHomeAboutListCreateView(generics.ListCreateAPIView):
+    queryset = HomeAbout.objects.all()
+    serializer_class = HomeAboutSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class AdminHomeAboutDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = HomeAbout.objects.all()
+    serializer_class = HomeAboutSerializer
+    permission_classes = [permissions.IsAdminUser]
+    lookup_field = "id"
+
+
+class AdminMissionStatementListCreateView(generics.ListCreateAPIView):
+    queryset = MissionStatement.objects.all()
+    serializer_class = MissionStatementSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class AdminMissionStatementDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MissionStatement.objects.all()
+    serializer_class = MissionStatementSerializer
+    permission_classes = [permissions.IsAdminUser]
+    lookup_field = "id"
+
+
+class AdminHomeAboutAchievementListCreateView(generics.ListCreateAPIView):
+    queryset = HomeAboutAchievement.objects.all()
+    serializer_class = HomeAboutAchievementSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class AdminHomeAboutAchievementDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = HomeAboutAchievement.objects.all()
+    serializer_class = HomeAboutAchievementSerializer
+    permission_classes = [permissions.IsAdminUser]
     lookup_field = "id"

@@ -6,8 +6,14 @@ from .views import (
     AdminAboutListCreateView,
     AdminAchievementDetailView,
     AdminAchievementListCreateView,
+    AdminHomeAboutAchievementDetailView,
+    AdminHomeAboutAchievementListCreateView,
+    AdminHomeAboutDetailView,
+    AdminHomeAboutListCreateView,
     AdminMissionDetailView,
     AdminMissionListCreateView,
+    AdminMissionStatementDetailView,
+    AdminMissionStatementListCreateView,
     AdminTeamMemberDetailView,
     AdminTeamMemberListCreateView,
     BlogListView,
@@ -15,7 +21,10 @@ from .views import (
     BlogCommentCreateView,
     EventListView,
     EventDetailView,
+    HomeAboutAchievementListView,
+    HomeAboutListView,
     MissionListView,
+    MissionStatementListView,
     ServiceListView,
     BloodInventoryListView,
     TeamMemberListView,
@@ -76,6 +85,17 @@ urlpatterns = [
     path("achievements/", AchievementListView.as_view(), name="achievement-list"),
     path("team-members/", TeamMemberListView.as_view(), name="team-member-list"),
     path("mission/", MissionListView.as_view(), name="mission-list"),
+    path("home-about/", HomeAboutListView.as_view(), name="home-about-list"),
+    path(
+        "mission-statement/",
+        MissionStatementListView.as_view(),
+        name="mission-statement-list",
+    ),
+    path(
+        "home-achievements/",
+        HomeAboutAchievementListView.as_view(),
+        name="home-achievements-list",
+    ),
     # Admin Endpoints
     path(
         "admin/blogs/", AdminBlogListCreateView.as_view(), name="admin-blog-list-create"
@@ -230,5 +250,35 @@ urlpatterns = [
         "admin/mission/<int:id>/",
         AdminMissionDetailView.as_view(),
         name="admin-mission-detail",
+    ),
+    path(
+        "admin/home-about/",
+        AdminHomeAboutListCreateView.as_view(),
+        name="admin-home-about-list-create",
+    ),
+    path(
+        "admin/home-about/<int:id>/",
+        AdminHomeAboutDetailView.as_view(),
+        name="admin-home-about-detail",
+    ),
+    path(
+        "admin/mission-statement/",
+        AdminMissionStatementListCreateView.as_view(),
+        name="admin-mission-statement-list-create",
+    ),
+    path(
+        "admin/mission-statement/<int:id>/",
+        AdminMissionStatementDetailView.as_view(),
+        name="admin-mission-statement-detail",
+    ),
+    path(
+        "admin/home-achievements/",
+        AdminHomeAboutAchievementListCreateView.as_view(),
+        name="admin-home-achievements-list-create",
+    ),
+    path(
+        "admin/home-achievements/<int:id>/",
+        AdminHomeAboutAchievementDetailView.as_view(),
+        name="admin-home-achievements-detail",
     ),
 ]
