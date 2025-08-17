@@ -24,6 +24,22 @@ class UserManager(BaseUserManager):
 
         return self.create_user(email, password, **extra_fields)
 
+class BloodInventory(models.Model):
+    BLOOD_GROUPS = [
+        ("A+", "A+"),
+        ("A-", "A-"),
+        ("B+", "B+"),
+        ("B-", "B-"),
+        ("AB+", "AB+"),
+        ("AB-", "AB-"),
+        ("O+", "O+"),
+        ("O-", "O-"),
+    ]
+    group = models.CharField(max_length=3, choices=BLOOD_GROUPS)
+    available = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.group} - {'Available' if self.available else 'Not Available'}"
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
@@ -33,6 +49,13 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+    
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+    phone = models.CharField(max_length=50, blank=True)
+    blood_group = models.CharField(max_length=3, choices=BloodInventory.BLOOD_GROUPS, blank=True)
+    address = models.TextField(blank=True)
+    last_donation_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return self.email
@@ -82,22 +105,6 @@ class Event(models.Model):
         return self.title
 
 
-class BloodInventory(models.Model):
-    BLOOD_GROUPS = [
-        ("A+", "A+"),
-        ("A-", "A-"),
-        ("B+", "B+"),
-        ("B-", "B-"),
-        ("AB+", "AB+"),
-        ("AB-", "AB-"),
-        ("O+", "O+"),
-        ("O-", "O-"),
-    ]
-    group = models.CharField(max_length=3, choices=BLOOD_GROUPS)
-    available = models.BooleanField(default=True)
-
-    def __str__(self):
-        return f"{self.group} - {'Available' if self.available else 'Not Available'}"
 
 
 class VaccineInventory(models.Model):

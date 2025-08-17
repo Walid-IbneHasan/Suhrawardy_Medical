@@ -28,8 +28,14 @@ class ImageInline(admin.TabularInline):
 
 @admin.register(User)
 class UserAdmin(ModelAdmin):
-    list_display = ["email", "is_staff"]
-    search_fields = ["email"]
+    list_display = ["email", "first_name", "last_name", "blood_group", "is_staff"]
+    search_fields = ["email", "first_name", "last_name"]
+    fieldsets = (
+        (None, {"fields": ("email", "password")}),
+        ("Personal info", {"fields": ("first_name", "last_name", "phone", "blood_group", "address", "last_donation_date")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
+    )
 
 
 @admin.register(Blog)

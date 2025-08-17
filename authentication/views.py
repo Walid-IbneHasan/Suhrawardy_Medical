@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import (
+    ProfileUpdateSerializer,
     RegisterSerializer,
     LoginSerializer,
     ChangePasswordSerializer,
@@ -127,3 +128,40 @@ class ResetPasswordView(APIView):
                 {"detail": "Password reset successfully"}, status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        data = {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone": user.phone,
+            "blood_group": user.blood_group,
+            "address": user.address,
+            "last_donation_date": user.last_donation_date,
+            "is_staff": user.is_staff,
+            "is_superuser": user.is_superuser,
+            "date_joined": user.date_joined.isoformat(),
+            "can_donate": self.can_donate(user),
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        user = request.user
+        serializer = ProfileUpdateSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def can_donate(self, user):
+        if not user.last_donation_date:
+            return True
+        three_months_ago = timezone.now().date() - timedelta(days=90)
+        return user.last_donation_date <= three_months_ago

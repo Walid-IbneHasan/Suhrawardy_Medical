@@ -1,3 +1,4 @@
+from datetime import timedelta
 from rest_framework import serializers
 from core.models import (
     About,
@@ -20,7 +21,7 @@ from core.models import (
     User,
     Image,
 )
-
+from django.utils import timezone
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
@@ -32,6 +33,12 @@ class UserSerializer(serializers.ModelSerializer):
             "id",
             "email",
             "username",
+            "first_name",
+            "last_name",
+            "phone",
+            "blood_group",
+            "address",
+            "last_donation_date",
             "is_staff",
             "is_superuser",
             "date_joined",
@@ -46,6 +53,11 @@ class UserSerializer(serializers.ModelSerializer):
         if data.get("is_superuser") and not data.get("is_staff"):
             data["is_staff"] = True  # Ensure is_staff is True when is_superuser is True
         return data
+    
+    def validate_last_donation_date(self, value):
+        if value and value > timezone.now().date():
+            raise serializers.ValidationError("Last donation date cannot be in the future.")
+        return value
 
     def create(self, validated_data):
         validated_data.pop("confirm_password")
@@ -219,6 +231,15 @@ class BloodRequestSerializer(serializers.ModelSerializer):
 class BloodDonationInterestSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 
+    def validate(self, data):
+        user = self.context["request"].user if "request" in self.context else None
+        if user:
+            if user.last_donation_date:
+                three_months_ago = timezone.now().date() - timedelta(days=90)
+                if user.last_donation_date > three_months_ago:
+                    raise serializers.ValidationError({"last_donation_date": "You can donate only after 3 months from your last donation."})
+            data["blood_group"] = user.blood_group or data.get("blood_group")
+        return data
     class Meta:
         model = BloodDonationInterest
         fields = ["id", "user", "blood_group", "available_date", "contact_info"]

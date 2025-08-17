@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from core.models import User
 from django.contrib.auth import authenticate
+from django.utils import timezone
 from .models import PasswordResetToken
 
 
@@ -35,7 +36,36 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid credentials")
         data["user"] = user
         data["is_superuser"] = user.is_superuser
+        data["profile_incomplete"] = not all(
+            [
+                user.first_name,
+                user.last_name,
+                user.phone,
+                user.blood_group,
+                user.address,
+            ]
+        )
         return data
+
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "first_name",
+            "last_name",
+            "phone",
+            "blood_group",
+            "address",
+            "last_donation_date",
+        ]
+
+    def validate_last_donation_date(self, value):
+        if value and value > timezone.now().date():
+            raise serializers.ValidationError(
+                "Last donation date cannot be in the future."
+            )
+        return value
 
 
 class ChangePasswordSerializer(serializers.Serializer):
