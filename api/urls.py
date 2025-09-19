@@ -31,6 +31,9 @@ from .views import (
     VaccineInventoryListView,
     BloodRequestCreateView,
     BloodDonationInterestCreateView,
+    MyBloodRequestListView,
+    MyDonationInterestListView,
+    MyDonationListCreateView,
     AdminBlogListCreateView,
     AdminBlogDetailView,
     AdminEventListCreateView,
@@ -55,6 +58,9 @@ from .views import (
     AdminUserDetailView,
     AdminImageListCreateView,
     AdminImageDetailView,
+    AdminDonationListCreateView,
+    AdminDonationDetailView,
+    ConvertDueInterestsView,
 )
 
 urlpatterns = [
@@ -81,6 +87,15 @@ urlpatterns = [
         BloodDonationInterestCreateView.as_view(),
         name="donate-interest",
     ),
+    path(
+        "my/blood-requests/", MyBloodRequestListView.as_view(), name="my-blood-requests"
+    ),
+    path(
+        "my/donation-interests/",
+        MyDonationInterestListView.as_view(),
+        name="my-donation-interests",
+    ),
+    path("my/donations/", MyDonationListCreateView.as_view(), name="my-donations"),
     path("about/", AboutListView.as_view(), name="about-list"),
     path("achievements/", AchievementListView.as_view(), name="achievement-list"),
     path("team-members/", TeamMemberListView.as_view(), name="team-member-list"),
@@ -194,6 +209,21 @@ urlpatterns = [
         "admin/donation-interests/<int:id>/",
         AdminBloodDonationInterestDetailView.as_view(),
         name="admin-donation-interest-detail",
+    ),
+    path(
+        "admin/donations/",
+        AdminDonationListCreateView.as_view(),
+        name="admin-donation-list-create",
+    ),
+    path(
+        "admin/donations/<int:id>/",
+        AdminDonationDetailView.as_view(),
+        name="admin-donation-detail",
+    ),
+    path(
+        "admin/convert-due-interests/",
+        ConvertDueInterestsView.as_view(),
+        name="convert-due-interests",
     ),
     path(
         "admin/users/", AdminUserListCreateView.as_view(), name="admin-user-list-create"

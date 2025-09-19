@@ -18,10 +18,12 @@ from core.models import (
     BlogComment,
     BloodRequest,
     BloodDonationInterest,
+    BloodDonation,
     User,
     Image,
 )
 from django.utils import timezone
+
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
@@ -53,10 +55,12 @@ class UserSerializer(serializers.ModelSerializer):
         if data.get("is_superuser") and not data.get("is_staff"):
             data["is_staff"] = True  # Ensure is_staff is True when is_superuser is True
         return data
-    
+
     def validate_last_donation_date(self, value):
         if value and value > timezone.now().date():
-            raise serializers.ValidationError("Last donation date cannot be in the future.")
+            raise serializers.ValidationError(
+                "Last donation date cannot be in the future."
+            )
         return value
 
     def create(self, validated_data):
@@ -107,24 +111,26 @@ class BlogSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
-            "slug",
+            "slug",          # keep exposed, but read-only
             "content",
             "created_at",
             "published",
             "images",
             "image_files",
         ]
-        read_only_fields = ["created_at"]
+        read_only_fields = ["created_at", "slug", "images"]
 
     def create(self, validated_data):
         image_files = validated_data.pop("image_files", [])
-        blog = Blog.objects.create(**validated_data)
+        blog = Blog.objects.create(**validated_data)  # slug auto-generates
         for image_file in image_files:
             Image.objects.create(blog=blog, image=image_file)
         return blog
 
     def update(self, instance, validated_data):
         image_files = validated_data.pop("image_files", None)
+        # don’t allow slug changes from payload
+        validated_data.pop("slug", None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
@@ -230,20 +236,130 @@ class BloodRequestSerializer(serializers.ModelSerializer):
 
 class BloodDonationInterestSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    donation_id = serializers.IntegerField(source="donation.id", read_only=True)
 
-    def validate(self, data):
-        user = self.context["request"].user if "request" in self.context else None
-        if user:
-            if user.last_donation_date:
-                three_months_ago = timezone.now().date() - timedelta(days=90)
-                if user.last_donation_date > three_months_ago:
-                    raise serializers.ValidationError({"last_donation_date": "You can donate only after 3 months from your last donation."})
-            data["blood_group"] = user.blood_group or data.get("blood_group")
-        return data
     class Meta:
         model = BloodDonationInterest
-        fields = ["id", "user", "blood_group", "available_date", "contact_info"]
-        read_only_fields = ["user"]
+        fields = [
+            "id",
+            "user",
+            "blood_group",
+            "available_date",
+            "contact_info",
+            "donation_id",
+        ]
+        read_only_fields = ["user", "donation_id"]
+
+    def validate(self, data):
+        """
+        Enforce the 3-month rule using only confirmed donations (BloodDonation),
+        and compare against the chosen available_date.
+        """
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return data
+
+        available_date = data.get("available_date")
+        if not available_date:
+            return data
+
+        # Look up the user's latest confirmed donation
+        latest = (
+            BloodDonation.objects.filter(user=user).order_by("-donation_date").first()
+        )
+
+        if latest and available_date < (latest.donation_date + timedelta(days=90)):
+            raise serializers.ValidationError(
+                {
+                    "available_date": (
+                        f"You can donate only after 3 months from your last donation on {latest.donation_date}."
+                    )
+                }
+            )
+
+        # Prefer the user's blood group if set and request didn't specify
+        if user.blood_group and not data.get("blood_group"):
+            data["blood_group"] = user.blood_group
+
+        return data
+
+
+class BloodDonationSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = BloodDonation
+        fields = [
+            "id",
+            "user",
+            "blood_group",
+            "donation_date",
+            "contact_info",
+            "notes",
+            "created_at",
+        ]
+        read_only_fields = ["user", "created_at"]
+
+    def validate_donation_date(self, value):
+        if value > timezone.now().date():
+            raise serializers.ValidationError("Donation date cannot be in the future.")
+        return value
+
+    def validate(self, data):
+        """
+        Enforce 90-day spacing by checking nearest existing donations before/after
+        the submitted donation_date for this user.
+        """
+        user = self.context["request"].user if "request" in self.context else None
+        if not user or not user.is_authenticated:
+            return data
+
+        donation_date = data.get("donation_date")
+        if not donation_date:
+            return data
+
+        qs = BloodDonation.objects.filter(user=user)
+
+        prev_donation = (
+            qs.filter(donation_date__lt=donation_date)
+            .order_by("-donation_date")
+            .first()
+        )
+        if prev_donation and donation_date < (
+            prev_donation.donation_date + timedelta(days=90)
+        ):
+            raise serializers.ValidationError(
+                {
+                    "donation_date": f"You must wait 3 months after your previous donation on {prev_donation.donation_date}."
+                }
+            )
+
+        next_donation = (
+            qs.filter(donation_date__gt=donation_date).order_by("donation_date").first()
+        )
+        if next_donation and next_donation.donation_date < (
+            donation_date + timedelta(days=90)
+        ):
+            raise serializers.ValidationError(
+                {
+                    "donation_date": f"This date conflicts with an existing donation on {next_donation.donation_date} (less than 3 months apart)."
+                }
+            )
+
+        return data
+
+    def create(self, validated_data):
+        user = self.context["request"].user
+        donation = BloodDonation.objects.create(user=user, **validated_data)
+        # Keep profile convenience field in sync with the latest donation
+        if (
+            not user.last_donation_date
+            or donation.donation_date > user.last_donation_date
+        ):
+            user.last_donation_date = donation.donation_date
+            user.save(update_fields=["last_donation_date"])
+        return donation
 
 
 class AboutSerializer(serializers.ModelSerializer):
@@ -322,14 +438,23 @@ class MissionSerializer(serializers.ModelSerializer):
 class HomeAboutSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeAbout
-        fields = ['id', 'title', 'description', 'years_experience', 'patients_served', 'satisfaction_rate']
+        fields = [
+            "id",
+            "title",
+            "description",
+            "years_experience",
+            "patients_served",
+            "satisfaction_rate",
+        ]
+
 
 class MissionStatementSerializer(serializers.ModelSerializer):
     class Meta:
         model = MissionStatement
-        fields = ['id', 'statement']
+        fields = ["id", "statement"]
+
 
 class HomeAboutAchievementSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomeAboutAchievement
-        fields = ['id', 'title', 'description', 'icon']
+        fields = ["id", "title", "description", "icon"]

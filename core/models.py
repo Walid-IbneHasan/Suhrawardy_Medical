@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.utils.text import slugify
 
 
 class UserManager(BaseUserManager):
@@ -24,6 +25,7 @@ class UserManager(BaseUserManager):
 
         return self.create_user(email, password, **extra_fields)
 
+
 class BloodInventory(models.Model):
     BLOOD_GROUPS = [
         ("A+", "A+"),
@@ -41,6 +43,7 @@ class BloodInventory(models.Model):
     def __str__(self):
         return f"{self.group} - {'Available' if self.available else 'Not Available'}"
 
+
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=150, unique=False, blank=True, null=True)
@@ -49,11 +52,13 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
-    
+
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     phone = models.CharField(max_length=50, blank=True)
-    blood_group = models.CharField(max_length=3, choices=BloodInventory.BLOOD_GROUPS, blank=True)
+    blood_group = models.CharField(
+        max_length=3, choices=BloodInventory.BLOOD_GROUPS, blank=True
+    )
     address = models.TextField(blank=True)
     last_donation_date = models.DateField(null=True, blank=True)
 
@@ -86,13 +91,32 @@ class Image(models.Model):
 
 class Blog(models.Model):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    # allow blank so serializers don’t require it; still unique in DB
+    slug = models.SlugField(unique=True, blank=True, max_length=80)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     published = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
+
+    def _generate_unique_slug(self):
+        max_len = self._meta.get_field("slug").max_length or 80
+        base = slugify(self.title) or "post"
+        base = base[:max_len]
+        slug = base
+        i = 2
+        # ensure uniqueness; trim base if suffix would exceed max_len
+        while Blog.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+            suffix = f"-{i}"
+            slug = f"{base[: max_len - len(suffix)]}{suffix}"
+            i += 1
+        return slug
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self._generate_unique_slug()
+        super().save(*args, **kwargs)
 
 
 class Event(models.Model):
@@ -103,8 +127,6 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
-
-
 
 
 class VaccineInventory(models.Model):
@@ -168,8 +190,35 @@ class BloodDonationInterest(models.Model):
     available_date = models.DateField()
     contact_info = models.CharField(max_length=50)
 
+    donation = models.OneToOneField(
+        "BloodDonation",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="source_interest",
+    )
+
     def __str__(self):
         return f"Interest by {self.user} for {self.blood_group}"
+
+
+# core/models.py
+
+
+class BloodDonation(models.Model):
+    user = models.ForeignKey("User", on_delete=models.CASCADE)
+    blood_group = models.CharField(max_length=3, choices=BloodInventory.BLOOD_GROUPS)
+    donation_date = models.DateField()
+    contact_info = models.CharField(max_length=100, blank=True)
+    notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-donation_date", "-id"]
+
+    def __str__(self):
+        return f"Donation by {self.user.email} on {self.donation_date} ({self.blood_group})"
 
 
 class About(models.Model):
