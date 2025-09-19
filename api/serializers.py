@@ -111,7 +111,7 @@ class BlogSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
-            "slug",          # keep exposed, but read-only
+            "slug",  # keep exposed, but read-only
             "content",
             "created_at",
             "published",
@@ -159,6 +159,7 @@ class EventSerializer(serializers.ModelSerializer):
         allow_empty=True,
     )
     description = serializers.CharField(allow_blank=True)
+    is_active = serializers.BooleanField(required=False)
 
     class Meta:
         model = Event
@@ -168,6 +169,7 @@ class EventSerializer(serializers.ModelSerializer):
             "description",
             "location",
             "date",
+            "is_active",
             "images",
             "image_files",
         ]

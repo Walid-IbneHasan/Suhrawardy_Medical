@@ -21,6 +21,8 @@ from .views import (
     BlogCommentCreateView,
     EventListView,
     EventDetailView,
+    UpcomingEventListView,
+    PastEventListView,
     HomeAboutAchievementListView,
     HomeAboutListView,
     MissionListView,
@@ -74,6 +76,8 @@ urlpatterns = [
     ),
     path("events/", EventListView.as_view(), name="event-list"),
     path("events/<int:id>/", EventDetailView.as_view(), name="event-detail"),
+    path("events/upcoming/", UpcomingEventListView.as_view(), name="events-upcoming"),
+    path("events/past/", PastEventListView.as_view(), name="events-past"),
     path("services/", ServiceListView.as_view(), name="service-list"),
     path("blood-inventory/", BloodInventoryListView.as_view(), name="blood-inventory"),
     path(

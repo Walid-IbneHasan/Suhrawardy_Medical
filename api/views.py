@@ -84,6 +84,31 @@ class EventDetailView(generics.RetrieveAPIView):
     lookup_field = "id"
 
 
+def _auto_expire_events():
+    """Deactivate any events whose date has already passed."""
+    Event.objects.filter(is_active=True, date__lt=timezone.now()).update(
+        is_active=False
+    )
+
+
+class UpcomingEventListView(generics.ListAPIView):
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        _auto_expire_events()
+        # Only active, future or today — order soonest first
+        return Event.objects.filter(is_active=True).order_by("date")
+
+
+class PastEventListView(generics.ListAPIView):
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        _auto_expire_events()
+        # Everything deactivated — newest past events first
+        return Event.objects.filter(is_active=False).order_by("-date")
+
+
 class ServiceListView(generics.ListAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer

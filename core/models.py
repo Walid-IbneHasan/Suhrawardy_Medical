@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.text import slugify
+from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
@@ -124,9 +125,16 @@ class Event(models.Model):
     description = models.TextField()
     location = models.CharField(max_length=255)
     date = models.DateTimeField()
+    is_active = models.BooleanField(default=True)  # NEW
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        # Auto-deactivate if the date is already in the past
+        if self.date and self.date < timezone.now():
+            self.is_active = False
+        super().save(*args, **kwargs)
 
 
 class VaccineInventory(models.Model):
