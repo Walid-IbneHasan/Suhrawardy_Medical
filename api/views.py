@@ -1,6 +1,11 @@
 from rest_framework import generics, permissions
 from rest_framework.permissions import IsAdminUser
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.db import transaction
+from django.utils import timezone
+
 from core.models import (
     About,
     Achievement,
@@ -19,6 +24,7 @@ from core.models import (
     BlogComment,
     BloodRequest,
     BloodDonationInterest,
+    BloodDonation,
     User,
     Image,
 )
@@ -40,6 +46,7 @@ from .serializers import (
     TopDonorSerializer,
     BloodRequestSerializer,
     BloodDonationInterestSerializer,
+    BloodDonationSerializer,
     UserSerializer,
     ImageSerializer,
 )
@@ -77,6 +84,31 @@ class EventDetailView(generics.RetrieveAPIView):
     lookup_field = "id"
 
 
+def _auto_expire_events():
+    """Deactivate any events whose date has already passed."""
+    Event.objects.filter(is_active=True, date__lt=timezone.now()).update(
+        is_active=False
+    )
+
+
+class UpcomingEventListView(generics.ListAPIView):
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        _auto_expire_events()
+        # Only active, future or today — order soonest first
+        return Event.objects.filter(is_active=True).order_by("date")
+
+
+class PastEventListView(generics.ListAPIView):
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        _auto_expire_events()
+        # Everything deactivated — newest past events first
+        return Event.objects.filter(is_active=False).order_by("-date")
+
+
 class ServiceListView(generics.ListAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
@@ -108,6 +140,42 @@ class BloodDonationInterestCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class MyBloodRequestListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = BloodRequestSerializer
+
+    def get_queryset(self):
+        return BloodRequest.objects.filter(user=self.request.user).order_by("-id")
+
+
+class MyDonationInterestListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = BloodDonationInterestSerializer
+
+    def get_queryset(self):
+        return BloodDonationInterest.objects.filter(user=self.request.user).order_by(
+            "-id"
+        )
+
+
+class MyDonationListCreateView(generics.ListCreateAPIView):
+    """
+    Normal users:
+      - GET: see only their donations
+      - POST: log a new donation (enforces 3-month rule)
+    Admins can still use admin endpoints for full visibility.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = BloodDonationSerializer
+
+    def get_queryset(self):
+        return BloodDonation.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save()  # serializer sets user from request + updates last_donation_date
 
 
 class AboutListView(generics.ListAPIView):
@@ -228,6 +296,23 @@ class AdminBloodInventoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = "id"
 
 
+class AdminDonationListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAdminUser]
+    serializer_class = BloodDonationSerializer
+    queryset = (
+        BloodDonation.objects.select_related("user")
+        .all()
+        .order_by("-donation_date", "-id")
+    )
+
+
+class AdminDonationDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminUser]
+    serializer_class = BloodDonationSerializer
+    queryset = BloodDonation.objects.select_related("user").all()
+    lookup_field = "id"
+
+
 class AdminVaccineInventoryListCreateView(generics.ListCreateAPIView):
     queryset = VaccineInventory.objects.all()
     serializer_class = VaccineInventorySerializer
@@ -287,6 +372,41 @@ class AdminBloodDonationInterestDetailView(generics.RetrieveUpdateDestroyAPIView
     serializer_class = BloodDonationInterestSerializer
     permission_classes = [IsAdminUser]
     lookup_field = "id"
+
+
+class ConvertDueInterestsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        today = timezone.now().date()
+        due = BloodDonationInterest.objects.select_related("user").filter(
+            available_date__lte=today, donation__isnull=True
+        )
+
+        created = 0
+        with transaction.atomic():
+            for interest in due:
+                donation = BloodDonation.objects.create(
+                    user=interest.user,
+                    blood_group=interest.blood_group or interest.user.blood_group or "",
+                    donation_date=interest.available_date,
+                    contact_info=interest.contact_info,
+                    notes=f"Auto-converted from donation interest on {interest.available_date}",
+                )
+                # link back to the interest & update user's last_donation_date
+                interest.donation = donation
+                interest.save(update_fields=["donation"])
+
+                if (
+                    not interest.user.last_donation_date
+                    or donation.donation_date > interest.user.last_donation_date
+                ):
+                    interest.user.last_donation_date = donation.donation_date
+                    interest.user.save(update_fields=["last_donation_date"])
+
+                created += 1
+
+        return Response({"converted": created})
 
 
 class AdminUserListCreateView(generics.ListCreateAPIView):

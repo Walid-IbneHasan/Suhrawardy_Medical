@@ -17,6 +17,7 @@ from .models import (
     BlogComment,
     BloodRequest,
     BloodDonationInterest,
+    BloodDonation,
 )
 
 
@@ -28,8 +29,37 @@ class ImageInline(admin.TabularInline):
 
 @admin.register(User)
 class UserAdmin(ModelAdmin):
-    list_display = ["email", "is_staff"]
-    search_fields = ["email"]
+    list_display = ["email", "first_name", "last_name", "blood_group", "is_staff"]
+    search_fields = ["email", "first_name", "last_name"]
+    fieldsets = (
+        (None, {"fields": ("email", "password")}),
+        (
+            "Personal info",
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "phone",
+                    "blood_group",
+                    "address",
+                    "last_donation_date",
+                )
+            },
+        ),
+        (
+            "Permissions",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
+    )
 
 
 @admin.register(Blog)
@@ -102,6 +132,23 @@ class BloodDonationInterestAdmin(ModelAdmin):
     list_display = ["user", "blood_group", "available_date"]
     search_fields = ["user__email", "blood_group"]
     list_filter = ["blood_group", "available_date"]
+
+
+@admin.register(BloodDonation)
+class BloodDonationAdmin(ModelAdmin):
+    list_display = ["user", "blood_group", "donation_date", "contact_info"]
+    search_fields = ["user__email", "blood_group", "contact_info"]
+    list_filter = ["blood_group", "donation_date", "created_at"]
+    date_hierarchy = "donation_date"
+    readonly_fields = ["created_at"]
+    fieldsets = (
+        (None, {"fields": ("user", "blood_group", "donation_date")}),
+        (
+            "Additional Information",
+            {"fields": ("contact_info", "notes"), "classes": ("collapse",)},
+        ),
+        ("Timestamps", {"fields": ("created_at",), "classes": ("collapse",)}),
+    )
 
 
 @admin.register(About)
