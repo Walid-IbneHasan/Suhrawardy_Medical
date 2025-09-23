@@ -186,6 +186,8 @@ class BloodRequest(models.Model):
     blood_group = models.CharField(max_length=3, choices=BloodInventory.BLOOD_GROUPS)
     location = models.CharField(max_length=255)
     contact = models.CharField(max_length=50)
+    collection_location = models.CharField(max_length=255, blank=True, null=True)
+    reason = models.TextField(blank=True, null=True)
     date_required = models.DateField()
 
     def __str__(self):
@@ -210,9 +212,6 @@ class BloodDonationInterest(models.Model):
         return f"Interest by {self.user} for {self.blood_group}"
 
 
-# core/models.py
-
-
 class BloodDonation(models.Model):
     user = models.ForeignKey("User", on_delete=models.CASCADE)
     blood_group = models.CharField(max_length=3, choices=BloodInventory.BLOOD_GROUPS)
@@ -227,6 +226,38 @@ class BloodDonation(models.Model):
 
     def __str__(self):
         return f"Donation by {self.user.email} on {self.donation_date} ({self.blood_group})"
+
+
+class BloodDonor(models.Model):
+    GENDER_CHOICES = [
+        ("Male", "Male"),
+        ("Female", "Female"),
+        ("Other", "Other"),
+    ]
+
+    name = models.CharField(max_length=255)
+    batch = models.CharField(max_length=100, blank=True)
+    blood_group = models.CharField(max_length=3, choices=BloodInventory.BLOOD_GROUPS)
+    phone = models.CharField(max_length=50)
+    last_donated_date = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.name} ({self.blood_group})"
+
+
+class PDFDocument(models.Model):
+    description = models.TextField(blank=True)
+    file = models.FileField(upload_to="pdfs/")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.description or self.file.name
 
 
 class About(models.Model):

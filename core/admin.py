@@ -1,9 +1,12 @@
+# core/admin.py
+
 from django.contrib import admin
 from unfold.admin import ModelAdmin
 from .models import (
     About,
     Achievement,
     Mission,
+    PDFDocument,
     TeamMember,
     User,
     Image,
@@ -18,6 +21,7 @@ from .models import (
     BloodRequest,
     BloodDonationInterest,
     BloodDonation,
+    BloodDonor,
 )
 
 
@@ -121,10 +125,24 @@ class BlogCommentAdmin(ModelAdmin):
 
 
 @admin.register(BloodRequest)
-class BloodRequestAdmin(ModelAdmin):
-    list_display = ["user", "blood_group", "date_required"]
-    search_fields = ["user__email", "blood_group"]
-    list_filter = ["blood_group", "date_required"]
+class BloodRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "blood_group",
+        "location",
+        "collection_location",
+        "reason",
+        "contact",
+        "date_required",
+    )
+    list_filter = ("blood_group", "date_required")
+    search_fields = (
+        "user__email",
+        "blood_group",
+        "location",
+        "collection_location",
+        "reason",
+    )
 
 
 @admin.register(BloodDonationInterest)
@@ -184,3 +202,34 @@ class MissionAdmin(ModelAdmin):
     list_display = ["title", "phone", "email"]
     search_fields = ["title", "description", "phone", "email", "address"]
     fields = ["title", "description", "phone", "email", "address"]
+
+
+@admin.register(BloodDonor)
+class BloodDonorAdmin(ModelAdmin):
+    list_display = [
+        "name",
+        "batch",
+        "blood_group",
+        "phone",
+        "gender",
+        "last_donated_date",
+        "created_at",
+    ]
+    search_fields = ["name", "batch", "blood_group", "phone"]
+    list_filter = ["blood_group", "gender", "last_donated_date", "created_at"]
+    date_hierarchy = "created_at"
+    readonly_fields = ["created_at"]
+    fieldsets = (
+        (None, {"fields": ("name", "batch", "blood_group", "phone", "gender")}),
+        ("Donation Information", {"fields": ("last_donated_date", "document")}),
+        ("Timestamps", {"fields": ("created_at",), "classes": ("collapse",)}),
+    )
+    list_editable = ["batch"]
+    ordering = ["-created_at"]
+
+
+@admin.register(PDFDocument)
+class PDFDocumentAdmin(ModelAdmin):
+    list_display = ["description", "file", "created_at", "updated_at"]
+    search_fields = ["description", "file"]
+    list_filter = ["created_at", "updated_at"]

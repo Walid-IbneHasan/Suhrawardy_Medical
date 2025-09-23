@@ -10,12 +10,14 @@ from core.models import (
     About,
     Achievement,
     Blog,
+    BloodDonor,
     Event,
     BloodInventory,
     HomeAbout,
     HomeAboutAchievement,
     Mission,
     MissionStatement,
+    PDFDocument,
     TeamMember,
     VaccineInventory,
     Service,
@@ -33,12 +35,14 @@ from .serializers import (
     AchievementSerializer,
     BlogSerializer,
     BlogCommentSerializer,
+    BloodDonorSerializer,
     EventSerializer,
     BloodInventorySerializer,
     HomeAboutAchievementSerializer,
     HomeAboutSerializer,
     MissionSerializer,
     MissionStatementSerializer,
+    PDFDocumentSerializer,
     TeamMemberSerializer,
     VaccineInventorySerializer,
     ServiceSerializer,
@@ -372,6 +376,34 @@ class AdminBloodDonationInterestDetailView(generics.RetrieveUpdateDestroyAPIView
     serializer_class = BloodDonationInterestSerializer
     permission_classes = [IsAdminUser]
     lookup_field = "id"
+
+
+class AdminBloodDonorListCreateView(generics.ListCreateAPIView):
+    queryset = BloodDonor.objects.all()
+    serializer_class = BloodDonorSerializer
+    permission_classes = [IsAdminUser]
+
+
+class AdminBloodDonorDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = BloodDonor.objects.all()
+    serializer_class = BloodDonorSerializer
+    permission_classes = [IsAdminUser]
+    lookup_field = "id"
+
+
+class AdminPDFDocumentListCreateView(generics.ListCreateAPIView):
+    queryset = PDFDocument.objects.all()
+    serializer_class = PDFDocumentSerializer
+    permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser]
+
+
+class AdminPDFDocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PDFDocument.objects.all()
+    serializer_class = PDFDocumentSerializer
+    permission_classes = [IsAdminUser]
+    lookup_field = "id"
+    parser_classes = [MultiPartParser, FormParser]
 
 
 class ConvertDueInterestsView(APIView):

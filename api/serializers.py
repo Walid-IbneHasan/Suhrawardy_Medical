@@ -4,12 +4,14 @@ from core.models import (
     About,
     Achievement,
     Blog,
+    BloodDonor,
     Event,
     BloodInventory,
     HomeAbout,
     HomeAboutAchievement,
     Mission,
     MissionStatement,
+    PDFDocument,
     TeamMember,
     VaccineInventory,
     Service,
@@ -28,6 +30,7 @@ from django.utils import timezone
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     confirm_password = serializers.CharField(write_only=True, required=True)
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -37,6 +40,7 @@ class UserSerializer(serializers.ModelSerializer):
             "username",
             "first_name",
             "last_name",
+            "name",
             "phone",
             "blood_group",
             "address",
@@ -47,7 +51,19 @@ class UserSerializer(serializers.ModelSerializer):
             "password",
             "confirm_password",
         ]
-        read_only_fields = ["date_joined"]
+        read_only_fields = ["date_joined", " name"]
+
+    def get_name(self, obj):
+        """
+        Combines first and last name into a single 'name' field.
+        Falls back to email if names are not set.
+        """
+        first_name = obj.first_name.strip() if obj.first_name else ""
+        last_name = obj.last_name.strip() if obj.last_name else ""
+
+        full_name = f"{first_name} {last_name}".strip()
+
+        return full_name if full_name else obj.email
 
     def validate(self, data):
         if data["password"] != data["confirm_password"]:
@@ -232,7 +248,16 @@ class BloodRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BloodRequest
-        fields = ["id", "user", "blood_group", "location", "contact", "date_required"]
+        fields = [
+            "id",
+            "user",
+            "blood_group",
+            "location",
+            "contact",
+            "reason",
+            "date_required",
+            "collection_location",
+        ]
         read_only_fields = ["user"]
 
 
@@ -363,6 +388,26 @@ class BloodDonationSerializer(serializers.ModelSerializer):
             user.save(update_fields=["last_donation_date"])
         return donation
 
+class BloodDonorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BloodDonor
+        fields = [
+            'id',
+            'name',
+            'batch',
+            'blood_group',
+            'phone',
+            'last_donated_date',
+            'gender',
+            'created_at',
+        ]
+        read_only_fields = ['created_at']
+
+class PDFDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PDFDocument
+        fields = ['id', 'file', 'description', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
 
 class AboutSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)
