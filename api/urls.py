@@ -6,6 +6,8 @@ from .views import (
     AdminAboutListCreateView,
     AdminAchievementDetailView,
     AdminAchievementListCreateView,
+    AdminBloodDonorDetailView,
+    AdminBloodDonorListCreateView,
     AdminHomeAboutAchievementDetailView,
     AdminHomeAboutAchievementListCreateView,
     AdminHomeAboutDetailView,
@@ -14,6 +16,8 @@ from .views import (
     AdminMissionListCreateView,
     AdminMissionStatementDetailView,
     AdminMissionStatementListCreateView,
+    AdminPDFDocumentDetailView,
+    AdminPDFDocumentListCreateView,
     AdminTeamMemberDetailView,
     AdminTeamMemberListCreateView,
     BlogListView,
@@ -223,6 +227,32 @@ urlpatterns = [
         "admin/donations/<int:id>/",
         AdminDonationDetailView.as_view(),
         name="admin-donation-detail",
+    ),
+    path(
+        "admin/home-achievements/<int:id>/",
+        AdminHomeAboutAchievementDetailView.as_view(),
+        name="admin-home-achievements-detail",
+    ),
+    path(
+        "admin/donors/",
+        AdminBloodDonorListCreateView.as_view(),
+        name="admin-blood-donor-list-create",
+    ),
+    path(
+        "admin/donors/<int:id>/",
+        AdminBloodDonorDetailView.as_view(),
+        name="admin-blood-donor-detail",
+    ),
+    
+    path(
+        "admin/pdfs/",
+        AdminPDFDocumentListCreateView.as_view(),
+        name="admin-pdf-list-create",
+    ),
+    path(
+        "admin/pdfs/<int:id>/",
+        AdminPDFDocumentDetailView.as_view(),
+        name="admin-pdf-detail",
     ),
     path(
         "admin/convert-due-interests/",
