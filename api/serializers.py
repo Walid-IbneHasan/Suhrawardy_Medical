@@ -456,7 +456,7 @@ class TeamMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TeamMember
-        fields = ["id", "name", "role", "specialty", "image", "images"]
+        fields = ["id", "name", "role", "session", "image", "images"]
 
     def create(self, validated_data):
         image = validated_data.pop("image", None)
