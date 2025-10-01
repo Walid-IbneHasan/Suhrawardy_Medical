@@ -192,8 +192,8 @@ class AchievementAdmin(ModelAdmin):
 
 @admin.register(TeamMember)
 class TeamMemberAdmin(ModelAdmin):
-    list_display = ["name", "role", "specialty"]
-    search_fields = ["name", "role", "specialty"]
+    list_display = ["name", "role", "session"]
+    search_fields = ["name", "role", "session"]
     inlines = [ImageInline]
 
 
