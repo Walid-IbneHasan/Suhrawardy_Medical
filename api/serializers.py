@@ -27,9 +27,13 @@ from core.models import (
 from django.utils import timezone
 
 
+# api/serializers.py
+
+
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True)
-    confirm_password = serializers.CharField(write_only=True, required=True)
+    # Make these optional for PATCH; still enforce on CREATE in validate()
+    password = serializers.CharField(write_only=True, required=False)
+    confirm_password = serializers.CharField(write_only=True, required=False)
     name = serializers.SerializerMethodField()
 
     class Meta:
@@ -51,25 +55,44 @@ class UserSerializer(serializers.ModelSerializer):
             "password",
             "confirm_password",
         ]
-        read_only_fields = ["date_joined", " name"]
+        read_only_fields = ["date_joined", "name"]  # (fix stray space)
 
     def get_name(self, obj):
-        """
-        Combines first and last name into a single 'name' field.
-        Falls back to email if names are not set.
-        """
         first_name = obj.first_name.strip() if obj.first_name else ""
         last_name = obj.last_name.strip() if obj.last_name else ""
-
         full_name = f"{first_name} {last_name}".strip()
-
         return full_name if full_name else obj.email
 
     def validate(self, data):
-        if data["password"] != data["confirm_password"]:
-            raise serializers.ValidationError({"password": "Passwords do not match"})
+        """
+        - On CREATE: password is required and must match confirm_password.
+        - On UPDATE/PATCH: password fields are optional; if either provided, both must be provided and match.
+        - If is_superuser=True comes in without is_staff, force is_staff=True.
+        """
+        is_create = self.instance is None
+        password = data.get("password", None)
+        confirm = data.get("confirm_password", None)
+
+        if is_create and not password:
+            raise serializers.ValidationError({"password": "This field is required."})
+
+        # If either password field is present, validate both and equality
+        if (password is not None) or (confirm is not None):
+            if not password or not confirm:
+                raise serializers.ValidationError(
+                    {"password": "Provide both password and confirm_password."}
+                )
+            if password != confirm:
+                raise serializers.ValidationError(
+                    {"password": "Passwords do not match"}
+                )
+
+        # Keep admin invariants
         if data.get("is_superuser") and not data.get("is_staff"):
-            data["is_staff"] = True  # Ensure is_staff is True when is_superuser is True
+            data["is_staff"] = True
+
+        # Date sanity
+        # (your validate_last_donation_date already covers future dates)
         return data
 
     def validate_last_donation_date(self, value):
@@ -80,28 +103,53 @@ class UserSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        validated_data.pop("confirm_password")
-        password = validated_data.pop("password")
+        # For create, by here password exists and (if present) matched confirm
+        validated_data.pop("confirm_password", None)
+        password = validated_data.pop("password", None)
+        if not password:
+            # Extra guard in case validate() is ever bypassed
+            raise serializers.ValidationError({"password": "This field is required."})
+
         user = User.objects.create_user(
-            email=validated_data["email"],
+            email=validated_data.get("email"),
             password=password,
             username=validated_data.get("username"),
             is_staff=validated_data.get("is_staff", False),
             is_superuser=validated_data.get("is_superuser", False),
         )
+
+        # Persist any other profile fields sent during create
+        extra_fields = [
+            "first_name",
+            "last_name",
+            "phone",
+            "blood_group",
+            "address",
+            "last_donation_date",
+        ]
+        changed = False
+        for f in extra_fields:
+            if f in validated_data:
+                setattr(user, f, validated_data[f])
+                changed = True
+        if changed:
+            user.save()
+
         return user
 
     def update(self, instance, validated_data):
         password = validated_data.pop("password", None)
         validated_data.pop("confirm_password", None)
+
         if validated_data.get("is_superuser") and not validated_data.get("is_staff"):
-            validated_data["is_staff"] = (
-                True  # Ensure is_staff is True when is_superuser is True
-            )
+            validated_data["is_staff"] = True
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+
         if password:
             instance.set_password(password)
+
         instance.save()
         return instance
 
@@ -388,26 +436,29 @@ class BloodDonationSerializer(serializers.ModelSerializer):
             user.save(update_fields=["last_donation_date"])
         return donation
 
+
 class BloodDonorSerializer(serializers.ModelSerializer):
     class Meta:
         model = BloodDonor
         fields = [
-            'id',
-            'name',
-            'batch',
-            'blood_group',
-            'phone',
-            'last_donated_date',
-            'gender',
-            'created_at',
+            "id",
+            "name",
+            "batch",
+            "blood_group",
+            "phone",
+            "last_donated_date",
+            "gender",
+            "created_at",
         ]
-        read_only_fields = ['created_at']
+        read_only_fields = ["created_at"]
+
 
 class PDFDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = PDFDocument
-        fields = ['id', 'file', 'description', 'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at']
+        fields = ["id", "file", "description", "created_at", "updated_at"]
+        read_only_fields = ["created_at", "updated_at"]
+
 
 class AboutSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(write_only=True, required=False, allow_null=True)

@@ -453,6 +453,37 @@ class AdminUserDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUser]
     lookup_field = "id"
 
+    def perform_update(self, serializer):
+        instance: User = self.get_object()
+        incoming_is_superuser = self.request.data.get("is_superuser")
+
+        # If request tries to demote from superuser -> non-superuser
+        if incoming_is_superuser is not None:
+            incoming_is_superuser = str(incoming_is_superuser).lower() in [
+                "1",
+                "true",
+                "yes",
+                "on",
+            ]
+            if instance.is_superuser and not incoming_is_superuser:
+                # Block removing superuser from the last remaining superuser
+                if User.objects.filter(is_superuser=True).count() == 1:
+                    from rest_framework.exceptions import ValidationError
+
+                    raise ValidationError(
+                        {"is_superuser": "You cannot demote the last superuser."}
+                    )
+                # Optional: block self-demotion to prevent accidental lockouts
+                if instance.id == self.request.user.id:
+                    from rest_framework.exceptions import ValidationError
+
+                    raise ValidationError(
+                        {"is_superuser": "You cannot demote yourself."}
+                    )
+
+        # If promoting to superuser, ensure staff as well (serializer also enforces this, but it's ok)
+        serializer.save()
+
 
 class AdminImageListCreateView(generics.ListCreateAPIView):
     queryset = Image.objects.all()
