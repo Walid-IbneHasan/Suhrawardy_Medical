@@ -56,13 +56,13 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "https://sandhanishsmcu.com",
     "https://www.sandhanishsmcu.com",
-    "http://localhost:8080",  # development server
+    "http://localhost:8080",
     "http://127.0.0.1:8080",
-    # Add your production Next.js domain
 ]
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOW_ALL_ORIGINS = False
+
 
 ROOT_URLCONF = "suhrawardy_medical.urls"
 
