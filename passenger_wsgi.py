@@ -1,16 +1,11 @@
-import os
-import sys
-from pathlib import Path
+# /home/sandhan1/api.sandhanishsmcu.com/passenger_wsgi.py
+import os, sys
 
-BASE_DIR = Path(__file__).resolve().parent
-sys.path.append(str(BASE_DIR))
+PROJECT_ROOT = "/home/sandhan1/api.sandhanishsmcu.com"
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-activate_this = os.path.join(BASE_DIR, "venv", "bin", "activate_this.py")
-if os.path.exists(activate_this):
-    exec(open(activate_this).read(), {"__file__": activate_this})
-
+# Make sure this matches your project package name
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "suhrawardy_medical.settings")
 
-from django.core.wsgi import get_wsgi_application
-
-application = get_wsgi_application()
+from suhrawardy_medical.wsgi import application  # uses the wsgi.py in your project
