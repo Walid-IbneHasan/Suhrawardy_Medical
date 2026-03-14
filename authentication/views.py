@@ -9,6 +9,7 @@ from .serializers import (
     ChangePasswordSerializer,
     ForgotPasswordSerializer,
     ResetPasswordSerializer,
+    get_user_role,
 )
 from core.models import User
 from .models import PasswordResetToken
@@ -43,7 +44,7 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
+        serializer = LoginSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             user = serializer.validated_data["user"]
             refresh = RefreshToken.for_user(user)
@@ -51,7 +52,9 @@ class LoginView(APIView):
                 {
                     "refresh": str(refresh),
                     "access": str(refresh.access_token),
+                    "is_staff": serializer.validated_data["is_staff"],
                     "is_superuser": serializer.validated_data["is_superuser"],
+                    "role": serializer.validated_data["role"],
                 },
                 status=status.HTTP_200_OK,
             )
@@ -69,6 +72,7 @@ class ProfileView(APIView):
             "username": user.username,
             "is_staff": user.is_staff,
             "is_superuser": user.is_superuser,
+            "role": get_user_role(user),
             "date_joined": user.date_joined.isoformat(),
         }
         return Response(data, status=status.HTTP_200_OK)
@@ -178,6 +182,7 @@ class ProfileView(APIView):
             "last_donation_date": user.last_donation_date,
             "is_staff": user.is_staff,
             "is_superuser": user.is_superuser,
+            "role": get_user_role(user),
             "date_joined": user.date_joined.isoformat(),
             "can_donate": self.can_donate(user),
         }

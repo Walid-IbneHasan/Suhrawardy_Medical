@@ -54,6 +54,7 @@ from .serializers import (
     UserSerializer,
     ImageSerializer,
 )
+from .permissions import IsSuperAdmin
 
 
 # Public Views
@@ -446,11 +447,17 @@ class AdminUserListCreateView(generics.ListCreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAdminUser]
 
+    def get_permissions(self):
+        # Moderators can view users; only super admins can create users.
+        if self.request.method in permissions.SAFE_METHODS:
+            return [IsAdminUser()]
+        return [IsSuperAdmin()]
+
 
 class AdminUserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsSuperAdmin]
     lookup_field = "id"
 
     def perform_update(self, serializer):

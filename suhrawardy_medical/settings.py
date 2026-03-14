@@ -15,6 +15,9 @@ ALLOWED_HOSTS = [
     "sandhanishsmcu.com",
     "www.sandhanishsmcu.com",
     "api.sandhanishsmcu.com",
+    "127.0.0.1:8000",
+    "127.0.0.1",
+    "localhost",
 ]
 
 CSRF_TRUSTED_ORIGINS = [

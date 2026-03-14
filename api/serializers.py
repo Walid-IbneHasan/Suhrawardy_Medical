@@ -35,6 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
     confirm_password = serializers.CharField(write_only=True, required=False)
     name = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -51,17 +52,25 @@ class UserSerializer(serializers.ModelSerializer):
             "last_donation_date",
             "is_staff",
             "is_superuser",
+            "role",
             "date_joined",
             "password",
             "confirm_password",
         ]
-        read_only_fields = ["date_joined", "name"]  # (fix stray space)
+        read_only_fields = ["date_joined", "name", "role"]  # (fix stray space)
 
     def get_name(self, obj):
         first_name = obj.first_name.strip() if obj.first_name else ""
         last_name = obj.last_name.strip() if obj.last_name else ""
         full_name = f"{first_name} {last_name}".strip()
         return full_name if full_name else obj.email
+
+    def get_role(self, obj):
+        if obj.is_superuser:
+            return "super_admin"
+        if obj.is_staff:
+            return "moderator"
+        return "user"
 
     def validate(self, data):
         """

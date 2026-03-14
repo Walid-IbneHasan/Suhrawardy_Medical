@@ -5,6 +5,14 @@ from django.utils import timezone
 from .models import PasswordResetToken
 
 
+def get_user_role(user):
+    if user.is_superuser:
+        return "super_admin"
+    if user.is_staff:
+        return "moderator"
+    return "user"
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
@@ -31,11 +39,30 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        user = authenticate(email=data["email"], password=data["password"])
+        request = self.context.get("request")
+        email = data["email"].strip().lower()
+        password = data["password"]
+
+        user = authenticate(request=request, email=email, password=password)
+
+        # Fallback for deployments where authenticate() may not resolve the user
+        # by email reliably with mixed auth backends.
+        if not user:
+            candidate = User.objects.filter(email__iexact=email).first()
+            if candidate and candidate.check_password(password):
+                user = candidate
+
         if not user:
             raise serializers.ValidationError("Invalid credentials")
+
+        if not user.is_active:
+            raise serializers.ValidationError("This account is inactive")
+
+        data["email"] = email
         data["user"] = user
+        data["is_staff"] = user.is_staff
         data["is_superuser"] = user.is_superuser
+        data["role"] = get_user_role(user)
         data["profile_incomplete"] = not all(
             [
                 user.first_name,
